@@ -550,162 +550,191 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
 
 ## 4. API 设计 (HTTP - 前端视角)
 
-本部分描述了B端管理后台前端通过HTTP调用的API。这些API是基于上述JSON-RPC接口的RESTful封装。
+本部分描述了B端管理后台前端通过HTTP调用的API。所有API均采用POST方法。
 
 **通用约定:**
 -   **Base URL**: `/api/v1/admin/trading-competitions` (示例，具体路径根据项目路由配置)
+-   **HTTP Method**: `POST` (所有接口)
 -   **认证**: 所有B端管理接口均需要认证，通过 `Authorization: Bearer <JWT_TOKEN>` 请求头传递。
 -   **Content-Type**: 请求和响应体均为 `application/json`。
 -   **错误处理**: 遵循项目统一的HTTP错误码和错误响应结构。
     -   `400 Bad Request`: 参数校验失败。
     -   `401 Unauthorized`: 未认证或认证失败。
     -   `403 Forbidden`: 无权限操作。
-    -   `404 Not Found`: 资源不存在。
+    -   `404 Not Found`: 资源不存在 (较少见，因为POST通常用于创建或操作，但如果依赖的内部资源找不到可能发生)。
     -   `500 Internal Server Error`: 服务器内部错误。
--   **分页**: 对于列表接口，使用查询参数 `page_no` 和 `page_size`。响应体遵循 `common.ListResponse` 结构。
+-   **请求体**: 所有先前通过路径参数或查询参数传递的数据，现在都作为字段包含在JSON请求体中。
 
 ### 活动管理
 
 1.  **创建交易大赛**
-    *   **HTTP Method**: `POST`
-    *   **Endpoint**: `/` (相对于Base URL)
+    *   **Endpoint**: `/create`
     *   **Request Body**: `dto.CreateTradingCompetitionParamsDTO`
     *   **Response Body**: `dto.TradingCompetitionDetailDTO`
     *   **描述**: 创建一个新的交易大赛。后端自动设置创建者信息，状态默认为 `DRAFT`。
 
 2.  **更新交易大赛**
-    *   **HTTP Method**: `PUT`
-    *   **Endpoint**: `/{competitionId}`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
-    *   **Request Body**: `dto.UpdateTradingCompetitionParamsDTO` (注意，`competition_id` 在此DTO中应省略或与路径参数一致)
+    *   **Endpoint**: `/update`
+    *   **Request Body**: `dto.UpdateTradingCompetitionParamsDTO` (其中 `competition_id` 为必填字段)
     *   **Response Body**: `dto.TradingCompetitionDetailDTO`
-    *   **描述**: 更新指定ID的交易大赛信息。只能修改特定状态下（如 `DRAFT`, `UPCOMING`）的活动。
+    *   **描述**: 更新指定ID的交易大赛信息。
 
 3.  **保存交易大赛为草稿**
-    *   **HTTP Method**: `POST`
-    *   **Endpoint**: `/draft`
+    *   **Endpoint**: `/save-draft`
     *   **Request Body**: `dto.CreateTradingCompetitionParamsDTO` 或 `dto.UpdateTradingCompetitionParamsDTO` (如果包含 `competition_id` 则为更新现有草稿)
     *   **Response Body**: `dto.TradingCompetitionDetailDTO`
     *   **描述**: 创建或更新一个草稿状态的交易大赛。
 
 4.  **获取交易大赛列表**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/`
-    *   **Query Parameters**:
-        *   `name_like` (string, optional): 活动名称模糊查询。
-        *   `status` (string, optional): 活动状态筛选 (e.g., "DRAFT", "ONGOING")。
-        *   `page_no` (int, optional, default: 1): 页码。
-        *   `page_size` (int, optional, default: 10): 每页数量。
+    *   **Endpoint**: `/list`
+    *   **Request Body**:
+        ```json
+        {
+          "filter": {
+            "name_like": "string, optional", // 活动名称模糊查询
+            "status": "string, optional"     // 活动状态筛选 (e.g., "DRAFT", "ONGOING")
+          },
+          "pagination": { // 对应 common.Page
+            "page_no": "int, optional, default: 1",
+            "page_size": "int, optional, default: 10"
+          }
+        }
+        ```
     *   **Response Body**: `common.ListResponse<dto.TradingCompetitionListItemDTO>`
 
 5.  **获取交易大赛详情**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/{competitionId}`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
+    *   **Endpoint**: `/detail`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string" // 交易大赛ID
+        }
+        ```
     *   **Response Body**: `dto.TradingCompetitionDetailDTO`
 
 6.  **发布交易大赛**
-    *   **HTTP Method**: `POST`
-    *   **Endpoint**: `/{competitionId}/publish`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
-    *   **Request Body**: (empty)
+    *   **Endpoint**: `/publish`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string" // 交易大赛ID
+        }
+        ```
     *   **Response Body**: `dto.BaseSuccessResponse` (或包含更新后状态的 `dto.TradingCompetitionDetailDTO`)
-    *   **描述**: 发布一个交易大赛。后端校验预算、奖池等配置。成功后活动状态变为 `UPCOMING` 或 `ONGOING`。
+    *   **描述**: 发布一个交易大赛。后端校验预算、奖池等配置。
 
 7.  **删除交易大赛**
-    *   **HTTP Method**: `DELETE`
-    *   **Endpoint**: `/{competitionId}`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
+    *   **Endpoint**: `/delete`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string" // 交易大赛ID
+        }
+        ```
     *   **Response Body**: `dto.BaseSuccessResponse`
-    *   **描述**: 软删除一个交易大赛。仅限特定状态（如 `DRAFT`, `UPCOMING`）。
+    *   **描述**: 软删除一个交易大赛。
 
 ### 预算与充值
 
 8.  **为大赛充值代币**
-    *   **HTTP Method**: `POST`
-    *   **Endpoint**: `/{competitionId}/budget/deposit`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
+    *   **Endpoint**: `/budget/deposit`
     *   **Request Body**:
         ```json
         {
-          "token_address": "string", // 代币合约地址
-          "deposit_amount_str": "string" // 充值数量 (大数字符串)
+          "competition_id": "string",       // 交易大赛ID
+          "token_address": "string",        // 代币合约地址
+          "deposit_amount_str": "string"  // 充值数量 (大数字符串)
         }
         ```
-        (对应 `dto.DepositTokenForCompetitionRequest` 中的部分字段，`competition_id` 从路径获取)
     *   **Response Body**:
         ```json
         {
           "success": true,
-          "updated_deposit": {
+          "message": "string, optional",
+          "updated_deposit": { // 可选，返回更新后的充值信息
             "token_symbol": "string",
             "new_deposited_amount_str": "string"
           }
         }
         ```
-        (对应 `dto.DepositTokenForCompetitionResponse`)
 
 9.  **获取大赛预算状态**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/{competitionId}/budget/status`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
+    *   **Endpoint**: `/budget/status`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string" // 交易大赛ID
+        }
+        ```
     *   **Response Body**:
         ```json
         {
           "deposits": [ // 数组，每个元素对应 dto.DepositedTokenStatusDTO
-            {
-              "token_address": "string",
-              "token_symbol": "string",
-              "token_decimals": "int",
-              "deposited_amount_str": "string",
-              "required_total_reward_str": "string",
-              "is_sufficient": true
-            }
+            // ... (结构同之前 GET 响应)
           ]
         }
         ```
         (对应 `dto.GetCompetitionBudgetStatusResponse`)
 
+
 ### 数据分析
 
 10. **获取数据分析摘要**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/{competitionId}/analytics/summary`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
-    *   **Query Parameters**:
-        *   `pool_id` (string, optional): 特定奖池ID。
-        *   `date_range` (string, optional, default: "ALL"): 时间范围 ("7D", "30D", "ALL")。
+    *   **Endpoint**: `/analytics/summary`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string",             // 交易大赛ID
+          "pool_id": "string, optional",          // 特定奖池ID
+          "date_range": "string, optional, default: "ALL"" // 时间范围 ("7D", "30D", "ALL")
+        }
+        ```
     *   **Response Body**: `dto.GetDataAnalysisSummaryResponse`
 
 11. **获取排行榜**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/{competitionId}/analytics/leaderboard/{poolId}`
-    *   **Path Parameters**:
-        *   `competitionId` (string) - 交易大赛ID。
-        *   `poolId` (string) - 奖池ID。
-    *   **Query Parameters**:
-        *   `page_no` (int, optional, default: 1): 页码。
-        *   `page_size` (int, optional, default: 10): 每页数量。
+    *   **Endpoint**: `/analytics/leaderboard`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string", // 交易大赛ID
+          "pool_id": "string",        // 奖池ID
+          "pagination": {
+            "page_no": "int, optional, default: 1",
+            "page_size": "int, optional, default: 10"
+          }
+        }
+        ```
     *   **Response Body**: `common.ListResponse<dto.DataAnalysisLeaderboardItemDTO>`
 
 12. **获取明细交易数据**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/{competitionId}/analytics/transactions`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
-    *   **Query Parameters**:
-        *   `pool_id` (string, optional): 特定奖池ID。
-        *   `user_address` (string, optional): 用户钱包地址筛选。
-        *   `page_no` (int, optional, default: 1): 页码。
-        *   `page_size` (int, optional, default: 10): 每页数量。
+    *   **Endpoint**: `/analytics/transactions`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string",             // 交易大赛ID
+          "filter": {
+            "pool_id": "string, optional",          // 特定奖池ID
+            "user_address": "string, optional"    // 用户钱包地址筛选
+          },
+          "pagination": {
+            "page_no": "int, optional, default: 1",
+            "page_size": "int, optional, default: 10"
+          }
+        }
+        ```
     *   **Response Body**: `common.ListResponse<dto.DataAnalysisTransactionItemDTO>`
 
 ### 辅助接口
 
 13. **根据Twitter Handle获取项目代币信息**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/utils/project-info-by-twitter` (此接口可能位于更通用的utils路径下)
-    *   **Query Parameter**: `twitter_handle` (string, required)
+    *   **Endpoint**: `/utils/project-info-by-twitter`
+    *   **Request Body**:
+        ```json
+        {
+          "twitter_handle": "string" // Twitter Handle
+        }
+        ```
     *   **Response Body**: `dto.GetProjectTokenInfoByTwitterResponse`
     *   **描述**: 用于B端配置项目信息时，通过Twitter Handle自动获取项目代币信息。
 
---- 
+---

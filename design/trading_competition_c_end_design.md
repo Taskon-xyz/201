@@ -319,72 +319,95 @@ func (h *TradingCompetitionUserHandler) GetSwapContext(ctx context.Context, r *j
 
 ## 4. API 设计 (HTTP - 前端视角)
 
-本部分描述了C端用户通过HTTP调用的API。这些API是基于上述JSON-RPC接口的RESTful封装，主要用于活动展示、用户数据查询和奖励领取。
+本部分描述了C端用户通过HTTP调用的API。所有API均采用POST方法，主要用于活动展示、用户数据查询和奖励领取。
 
 **通用约定:**
 -   **Base URL**: `/api/v1/trading-competitions` (示例，具体路径根据项目路由配置)
+-   **HTTP Method**: `POST` (所有接口)
 -   **认证**: 
-    -   公开可访问接口 (如获取活动详情、排行榜) 不需要认证。
+    -   公开可访问接口 (如获取活动详情、排行榜) 通常不强制认证，但如果请求中包含用户认证信息，可以用于个性化展示。
     -   需要用户身份的接口 (如获取个人数据、领取奖励) 需要通过 `Authorization: Bearer <USER_JWT_TOKEN>` 请求头传递用户认证信息。
 -   **Content-Type**: 请求和响应体均为 `application/json`。
 -   **错误处理**: 遵循项目统一的HTTP错误码和错误响应结构。
--   **分页**: 对于列表接口，使用查询参数 `page_no` 和 `page_size`。响应体遵循 `common.ListResponse` 结构。
+-   **请求体**: 所有先前通过路径参数或查询参数传递的数据，现在都作为字段包含在JSON请求体中。
 
 ### 活动浏览与参与
 
 1.  **获取交易大赛详情 (C端用户视角)**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/{competitionId}`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
-    *   **Query Parameter**: `user_wallet_address` (string, optional) - 用户钱包地址，用于关联返回用户特定数据，如是否已参与、个人统计摘要等。
+    *   **Endpoint**: `/detail`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string", // 交易大赛ID
+          "user_wallet_address": "string, optional" // 用户钱包地址，用于关联返回用户特定数据
+        }
+        ```
     *   **Response Body**: `dto.CompetitionDetailForUserDTO`
     *   **描述**: 获取单个交易大赛的详细信息，供用户查看。
 
 2.  **获取奖池排行榜 (C端用户视角)**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/{competitionId}/pools/{poolId}/leaderboard`
-    *   **Path Parameters**:
-        *   `competitionId` (string) - 交易大赛ID。
-        *   `poolId` (string) - 奖池ID。
-    *   **Query Parameters**:
-        *   `page_no` (int, optional, default: 1): 页码。
-        *   `page_size` (int, optional, default: 10): 每页数量。
-        *   `user_wallet_address` (string, optional) - 用户钱包地址，用于在排行榜中高亮或标记当前用户。
+    *   **Endpoint**: `/pool/leaderboard`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string", // 交易大赛ID
+          "pool_id": "string",        // 奖池ID
+          "pagination": { // 对应 common.Page
+            "page_no": "int, optional, default: 1",
+            "page_size": "int, optional, default: 10"
+          },
+          "user_wallet_address": "string, optional" // 用户钱包地址，用于在排行榜中高亮或标记当前用户
+        }
+        ```
     *   **Response Body**: `common.ListResponse<dto.LeaderboardEntryDTO>`
 
 3.  **获取我的活动数据 (需认证)**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/{competitionId}/my-data`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
+    *   **Endpoint**: `/my-data`
     *   **Headers**: `Authorization: Bearer <USER_JWT_TOKEN>`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string" // 交易大赛ID
+        }
+        ```
     *   **Response Body**: `dto.UserCompetitionOverallDataDTO`
-    *   **描述**: 获取当前认证用户在指定交易大赛中所有奖池的个人数据统计（交易量、排名、预估奖励等）。请求时需提供钱包地址，并通过签名验证或token验证用户身份。
+    *   **描述**: 获取当前认证用户在指定交易大赛中所有奖池的个人数据统计。
 
 4.  **获取我的活动结果与奖励 (需认证)**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/{competitionId}/my-results`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
+    *   **Endpoint**: `/my-results`
     *   **Headers**: `Authorization: Bearer <USER_JWT_TOKEN>`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string" // 交易大赛ID
+        }
+        ```
     *   **Response Body**: `dto.UserActivityResultDTO`
-    *   **描述**: 获取当前认证用户在活动结束后的最终结果，包括是否获奖、具体奖励列表及领取状态。
+    *   **描述**: 获取当前认证用户在活动结束后的最终结果，包括奖励列表。
 
 ### 奖励领取 (需认证)
 
 5.  **领取单个奖励**
-    *   **HTTP Method**: `POST`
-    *   **Endpoint**: `/rewards/{rewardRecordId}/claim`
-    *   **Path Parameter**: `rewardRecordId` (string) - 奖励记录ID (来自 `trading_competition_user_rewards.id`)。
+    *   **Endpoint**: `/rewards/claim`
     *   **Headers**: `Authorization: Bearer <USER_JWT_TOKEN>`
-    *   **Request Body**: (empty, 或包含 user_wallet_address 用于后端额外校验，但通常通过认证token获取)
+    *   **Request Body**:
+        ```json
+        {
+          "reward_record_id": "string" // 奖励记录ID (来自 trading_competition_user_rewards.id)
+        }
+        ```
     *   **Response Body**: `dto.UserRewardItemDTO` (返回更新后的奖励项状态)
-    *   **描述**: 用户领取指定的单个奖励。后端服务处理实际的链上交互或状态更新。
+    *   **描述**: 用户领取指定的单个奖励。
 
 6.  **批量领取活动所有可领奖励**
-    *   **HTTP Method**: `POST`
-    *   **Endpoint**: `/{competitionId}/claim-all-rewards`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
+    *   **Endpoint**: `/claim-all-rewards`
     *   **Headers**: `Authorization: Bearer <USER_JWT_TOKEN>`
-    *   **Request Body**: (empty)
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string" // 交易大赛ID
+        }
+        ```
     *   **Response Body**:
         ```json
         {
@@ -400,11 +423,15 @@ func (h *TradingCompetitionUserHandler) GetSwapContext(ctx context.Context, r *j
 ### 辅助接口
 
 7.  **获取Swap组件上下文信息**
-    *   **HTTP Method**: `GET`
-    *   **Endpoint**: `/{competitionId}/swap-context`
-    *   **Path Parameter**: `competitionId` (string) - 交易大赛ID。
-    *   **Query Parameter**: `pool_id` (string, optional) - 奖池ID。如果提供，则返回针对该特定奖池的交易对上下文；否则返回活动全局的。
+    *   **Endpoint**: `/swap-context`
+    *   **Request Body**:
+        ```json
+        {
+          "competition_id": "string",             // 交易大赛ID
+          "pool_id": "string, optional"           // 奖池ID。如果提供，则返回针对该特定奖池的上下文
+        }
+        ```
     *   **Response Body**: `dto.SwapContextDTO`
-    *   **描述**: 为前端Swap组件提供初始化所需的上下文信息，如链ID、DEX ID、允许的交易对等。
+    *   **描述**: 为前端Swap组件提供初始化所需的上下文信息。
 
 --- 
