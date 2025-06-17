@@ -41,6 +41,12 @@ CREATE TABLE `trading_competition_user_rewards` (
 
 遵循 `taskon-actions/guideline.md`。C端API主要用于数据展示和触发特定操作（如领奖）。
 
+**通用约定:**
+- DTOs (Data Transfer Objects) 定义在 `internal/application/dto/` 或类似路径下的 `trading_competition_user_dto.go` (示例文件名) 或相关文件中。
+- 所有涉及金额、数量的原始精度数据均推荐使用字符串类型以避免精度丢失。
+- 日期和时间均推荐使用 ISO8601 UTC 字符串格式。
+- 关键业务操作的API会引用其需求来源文档章节。
+
 **DTOs (C-端)**
 Package `dto` (位于 `internal/application/dto/` 或类似路径)
 
@@ -52,6 +58,7 @@ import (
 )
 
 // CompetitionProjectInfoDTO 定义了C端展示的项目信息
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 页面头部区域" (项目信息展示部分)
 type CompetitionProjectInfoDTO struct {
 	ProjectName          string `json:"project_name"`                   // 项目名称
 	ProjectLogoURL       string `json:"project_logo_url"`               // 项目Logo URL
@@ -60,6 +67,7 @@ type CompetitionProjectInfoDTO struct {
 }
 
 // CompetitionPoolRuleDTO 定义了C端展示的奖池规则信息
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 2. 功能描述模板 -> 功能点：活动规则弹窗"
 type CompetitionPoolRuleDTO struct {
 	PoolID                   string `json:"pool_id"`                      // 奖池ID (数字字符串)
 	PoolName                 string `json:"pool_name"`                    // 奖池名称
@@ -71,30 +79,41 @@ type CompetitionPoolRuleDTO struct {
 	WinnerEligibilityDesc    string `json:"winner_eligibility_desc,omitempty"` // 获奖资格描述 (例如 "Trading Volume >= 100 USD" or "Top 10 Rank")
 }
 
+// TradingCompetitionPageStyleParamsDTO 页面样式配置参数 (用于C端展示)
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 页面样式配置" (结构参考B端定义)
+// 注意: 此DTO结构应与B端 `TradingCompetitionPageStyleParamsDTO` 保持一致或根据C端需求调整。
+type TradingCompetitionPageStyleParamsDTO struct {
+	BackgroundType *string `json:"background_type,omitempty"` // 背景类型 (COLOR, IMAGE)
+	BackgroundValue *string `json:"background_value,omitempty"` // 背景值 (颜色代码或图片URL)
+	ThemeColor     *string `json:"theme_color,omitempty"`      // 主题色 (十六进制颜色代码)
+}
+
 // CompetitionDetailForUserDTO 定义了C端用户视角的活动详情
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 页面头部区域", "三、功能设计 -> 2. 功能描述模板 -> 功能点：页面整体布局与头部信息"
 type CompetitionDetailForUserDTO struct {
-	ID                       string                        `json:"id"`                                 // 活动ID (数字字符串)
-	Name                     string                        `json:"name"`                               // 活动名称
-	BannerPCURL              string                        `json:"banner_pc_url,omitempty"`            // PC端Banner图片URL
-	BannerMobileURL          string                        `json:"banner_mobile_url,omitempty"`        // Mobile端Banner图片URL
-	StartTime                string                        `json:"start_time"`                         // 活动开始时间 (ISO8601 UTC 字符串)
-	EndTime                  string                        `json:"end_time"`                           // 活动结束时间 (ISO8601 UTC 字符串)
-	CurrentStatus            string                        `json:"current_status"`                     // 活动当前状态 ("UPCOMING", "ONGOING", "ENDED", "CALCULATING_RESULTS", "RESULTS_ANNOUNCED")
-	RemainingTimeSeconds     *int64                        `json:"remaining_time_seconds,omitempty"`  // 剩余时间 (秒, 如果活动未结束)
-	DotAnimationEnabled      bool                          `json:"dot_animation_enabled"`              // 是否启用点状动画
-	PageStyleConfig          *TradingCompetitionPageStyleDTO `json:"page_style_config,omitempty"`        // 页面样式配置 (可复用B端DTO或定义类似结构)
-	NetworkID                string                        `json:"network_id"`                         // 链ID
-	DexID                    string                        `json:"dex_id"`                             // DEX ID
-	ParticipatingProjects    []CompetitionProjectInfoDTO   `json:"participating_projects,omitempty"`   // 参与项目列表
-	RulesSummary             string                        `json:"rules_summary,omitempty"`            // 总规则概述 (HTML或Markdown格式)
-	PoolRules                []CompetitionPoolRuleDTO      `json:"pool_rules"`                         // 各奖池规则列表
-	TotalPrizeValueUSDStr    string                        `json:"total_prize_value_usd_str,omitempty"`// 活动总奖金价值 (USD, 格式化字符串)
-	TotalTradingVolumeUSDStr string                        `json:"total_trading_volume_usd_str,omitempty"`// 活动当前总交易量 (USD, 格式化字符串)
-	TotalParticipants        int                           `json:"total_participants,omitempty"`       // 活动当前总参与人数
-	UserSpecificData         *UserCompetitionOverallDataDTO `json:"user_specific_data,omitempty"`    // 当前用户的总体数据 (如果用户已连接钱包且活动进行中或已结束)
+	ID                       string                                `json:"id"`                                 // 活动ID (数字字符串)
+	Name                     string                                `json:"name"`                               // 活动名称
+	BannerPCURL              string                                `json:"banner_pc_url,omitempty"`            // PC端Banner图片URL
+	BannerMobileURL          string                                `json:"banner_mobile_url,omitempty"`        // Mobile端Banner图片URL
+	StartTime                string                                `json:"start_time"`                         // 活动开始时间 (ISO8601 UTC 字符串)
+	EndTime                  string                                `json:"end_time"`                           // 活动结束时间 (ISO8601 UTC 字符串)
+	CurrentStatus            string                                `json:"current_status"`                     // 活动当前状态 ("UPCOMING", "ONGOING", "ENDED", "CALCULATING_RESULTS", "RESULTS_ANNOUNCED")
+	RemainingTimeSeconds     *int64                                `json:"remaining_time_seconds,omitempty"`  // 剩余时间 (秒, 如果活动未结束)
+	DotAnimationEnabled      bool                                  `json:"dot_animation_enabled"`              // 是否启用点状动画
+	PageStyleConfig          *TradingCompetitionPageStyleParamsDTO `json:"page_style_config,omitempty"`        // 页面样式配置 (结构类似B端的 dto.TradingCompetitionPageStyleParamsDTO 或需C端单独定义)
+	NetworkID                string                                `json:"network_id"`                         // 链ID
+	DexID                    string                                `json:"dex_id"`                             // DEX ID
+	ParticipatingProjects    []CompetitionProjectInfoDTO           `json:"participating_projects,omitempty"`   // 参与项目列表
+	RulesSummary             string                                `json:"rules_summary,omitempty"`            // 总规则概述 (HTML或Markdown格式)
+	PoolRules                []CompetitionPoolRuleDTO              `json:"pool_rules"`                         // 各奖池规则列表
+	TotalPrizeValueUSDStr    string                                `json:"total_prize_value_usd_str,omitempty"`// 活动总奖金价值 (USD, 格式化字符串)
+	TotalTradingVolumeUSDStr string                                `json:"total_trading_volume_usd_str,omitempty"`// 活动当前总交易量 (USD, 格式化字符串)
+	TotalParticipants        int                                   `json:"total_participants,omitempty"`       // 活动当前总参与人数
+	UserSpecificData         *UserCompetitionOverallDataDTO        `json:"user_specific_data,omitempty"`    // 当前用户的总体数据 (如果用户已连接钱包且活动进行中或已结束)
 }
 
 // UserCompetitionDataDTO 定义了用户在单个奖池中的数据
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 活动数据展示区 -> 我的数据/Leaderboard"
 type UserCompetitionDataDTO struct {
 	PoolID                  string  `json:"pool_id"`                             // 奖池ID (数字字符串)
 	PoolName                string  `json:"pool_name"`                           // 奖池名称
@@ -105,6 +124,7 @@ type UserCompetitionDataDTO struct {
 }
 
 // UserCompetitionOverallDataDTO 聚合用户在一个活动中的所有奖池数据
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 活动数据展示区 -> 我的数据/Leaderboard"
 type UserCompetitionOverallDataDTO struct {
 	DataPerPool               []UserCompetitionDataDTO `json:"data_per_pool"`                             // 用户在各奖池的数据
 	TotalMyVolumeUSDStr       string                   `json:"total_my_volume_usd_str,omitempty"`         // 用户在活动中的总交易额 (USD, 格式化字符串)
@@ -112,6 +132,7 @@ type UserCompetitionOverallDataDTO struct {
 }
 
 // LeaderboardEntryDTO 定义了排行榜条目
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 活动数据展示区 -> 我的数据/Leaderboard"
 type LeaderboardEntryDTO struct {
 	Rank                   int     `json:"rank"`                                // 排名
 	UserDisplayAddress     string  `json:"user_display_address"`                // 用户显示地址 (例如 "0x1234...abcd" 或 ENS 名称)
@@ -122,6 +143,7 @@ type LeaderboardEntryDTO struct {
 }
 
 // UserRewardItemDTO 定义了用户可领取的单个奖励项
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 活动状态相关展示 -> 活动已结束 - 获奖"
 type UserRewardItemDTO struct {
 	RewardRecordID      string  `json:"reward_record_id"`                  // 奖励记录ID (来自 trading_competition_user_rewards.id, 数字字符串)
 	PoolID              string  `json:"pool_id"`                           // 奖池ID (数字字符串)
@@ -135,6 +157,7 @@ type UserRewardItemDTO struct {
 }
 
 // UserActivityResultDTO 定义了用户活动结束后的结果
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 活动状态相关展示 -> 活动已结束 - 获奖/未获奖"
 type UserActivityResultDTO struct {
 	OverallStatus  string                `json:"overall_status"`                    // 用户总体结果 ("WON", "NOT_WON", "PENDING_CALCULATION", "NO_PARTICIPATION")
 	Rewards        []UserRewardItemDTO   `json:"rewards,omitempty"`                 // 用户获得的奖励列表 (如果WON)
@@ -142,6 +165,7 @@ type UserActivityResultDTO struct {
 }
 
 // TokenInfoDTO (通用, 可复用)
+// Requirement Source: Implied by various DTOs needing token details (e.g., SwapContextDTO)
 type TokenInfoDTO struct {
 	Address  string `json:"address"`           // 代币合约地址
 	Symbol   string `json:"symbol"`            // 代币符号
@@ -150,6 +174,7 @@ type TokenInfoDTO struct {
 }
 
 // SwapContextDTO 定义了Swap组件所需的上下文信息
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> Swap交互区域", "三、功能设计 -> 2. 功能描述模板 -> 功能点：Swap交互区域"
 type SwapContextDTO struct {
 	NetworkID              string         `json:"network_id"`                         // 活动指定的链ID
 	DexID                  string         `json:"dex_id"`                             // 活动指定的DEX ID
@@ -190,6 +215,7 @@ type TradingCompetitionUserHandler struct {
 // Method: tradingCompetitionUser_getCompetitionDetail
 // Params: { "competition_id": "string", "user_wallet_address": "string" (optional) }
 // Response: dto.CompetitionDetailForUserDTO
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 页面头部区域" and "三、功能设计 -> 2. 功能描述模板 -> 功能点：页面整体布局与头部信息"
 func (h *TradingCompetitionUserHandler) GetCompetitionDetail(ctx context.Context, r *jsonrpc.Request, result *dto.CompetitionDetailForUserDTO) error {
 	var params struct {
 		CompetitionID     string  `json:"competition_id"`
@@ -207,6 +233,7 @@ func (h *TradingCompetitionUserHandler) GetCompetitionDetail(ctx context.Context
 // Method: tradingCompetitionUser_getPoolLeaderboard
 // Params: { "competition_id": "string", "pool_id": "string", "pagination": common.Page, "user_wallet_address": "string" (optional) }
 // Response: common.ListResponse (of dto.LeaderboardEntryDTO)
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 活动数据展示区 -> 我的数据/Leaderboard" and "一、产品概述 -> 3. 用户故事" (查看排行榜)
 func (h *TradingCompetitionUserHandler) GetPoolLeaderboard(ctx context.Context, r *jsonrpc.Request, result *common.ListResponse) error {
 	var params struct {
 		CompetitionID     string      `json:"competition_id"`
@@ -228,6 +255,7 @@ func (h *TradingCompetitionUserHandler) GetPoolLeaderboard(ctx context.Context, 
 // Method: tradingCompetitionUser_getMyDataForCompetition
 // Params: { "competition_id": "string", "user_wallet_address": "string" }
 // Response: dto.UserCompetitionOverallDataDTO
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 活动数据展示区 -> 我的数据/Leaderboard" and "一、产品概述 -> 3. 用户故事" (查看个人数据)
 func (h *TradingCompetitionUserHandler) GetMyDataForCompetition(ctx context.Context, r *jsonrpc.Request, result *dto.UserCompetitionOverallDataDTO) error {
 	var params struct {
 		CompetitionID     string `json:"competition_id"`
@@ -245,6 +273,7 @@ func (h *TradingCompetitionUserHandler) GetMyDataForCompetition(ctx context.Cont
 // Method: tradingCompetitionUser_getMyActivityResult
 // Params: { "competition_id": "string", "user_wallet_address": "string" }
 // Response: dto.UserActivityResultDTO
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 活动状态相关展示 -> 活动已结束 - 获奖/未获奖" and "一、产品概述 -> 3. 用户故事" (查看获奖情况)
 func (h *TradingCompetitionUserHandler) GetMyActivityResult(ctx context.Context, r *jsonrpc.Request, result *dto.UserActivityResultDTO) error {
 	var params struct {
 		CompetitionID     string `json:"competition_id"`
@@ -263,6 +292,7 @@ func (h *TradingCompetitionUserHandler) GetMyActivityResult(ctx context.Context,
 // Method: tradingCompetitionUser_claimReward (or a more specific like actions_claimTradingCompetitionReward)
 // Params: { "reward_record_id": "string", "user_wallet_address": "string" }
 // Response: dto.UserRewardItemDTO (updated status of the claimed item)
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 活动状态相关展示 -> 活动已结束 - 获奖" and "一、产品概述 -> 3. 用户故事" (领取奖励)
 func (h *TradingCompetitionUserHandler) ClaimReward(ctx context.Context, r *jsonrpc.Request, result *dto.UserRewardItemDTO) error {
 	var params struct {
 		RewardRecordID    string `json:"reward_record_id"` // 对应 trading_competition_user_rewards.id
@@ -282,6 +312,7 @@ func (h *TradingCompetitionUserHandler) ClaimReward(ctx context.Context, r *json
 // Method: tradingCompetitionUser_claimAllRewards (or actions_claimAllTradingCompetitionRewards)
 // Params: { "competition_id": "string", "user_wallet_address": "string" }
 // Response: struct { Results []dto.UserRewardItemDTO; OverallSuccess bool; Message string (optional) }
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> 活动状态相关展示 -> 活动已结束 - 获奖" (Claim All 按钮暗示)
 func (h *TradingCompetitionUserHandler) ClaimAllRewards(ctx context.Context, r *jsonrpc.Request, result *struct{ Results []dto.UserRewardItemDTO; OverallSuccess bool; Message string `json:"message,omitempty"` }) error {
 	var params struct {
 		CompetitionID     string `json:"competition_id"`
@@ -302,6 +333,7 @@ func (h *TradingCompetitionUserHandler) ClaimAllRewards(ctx context.Context, r *
 // Method: tradingCompetitionUser_getSwapContext
 // Params: { "competition_id": "string", "pool_id": "string" (optional) }
 // Response: dto.SwapContextDTO
+// Requirement Source: 新需求/整理后的md/new-交易大赛-C端.md - "三、功能设计 -> 1. 功能地图 -> Swap交互区域" and "三、功能设计 -> 2. 功能描述模板 -> 功能点：Swap交互区域"
 func (h *TradingCompetitionUserHandler) GetSwapContext(ctx context.Context, r *jsonrpc.Request, result *dto.SwapContextDTO) error {
 	var params struct {
 		CompetitionID string  `json:"competition_id"`
@@ -344,6 +376,7 @@ func (h *TradingCompetitionUserHandler) GetSwapContext(ctx context.Context, r *j
         ```
     *   **Response Body**: `dto.CompetitionDetailForUserDTO`
     *   **描述**: 获取单个交易大赛的详细信息，供用户查看。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-C端.md` - "三、功能设计 -> 1. 功能地图 -> 页面头部区域" and "三、功能设计 -> 2. 功能描述模板 -> 功能点：活动规则弹窗"
 
 2.  **获取奖池排行榜 (C端用户视角)**
     *   **Endpoint**: `/pool/leaderboard`
@@ -360,6 +393,7 @@ func (h *TradingCompetitionUserHandler) GetSwapContext(ctx context.Context, r *j
         }
         ```
     *   **Response Body**: `common.ListResponse<dto.LeaderboardEntryDTO>`
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-C端.md` - "三、功能设计 -> 1. 功能地图 -> 活动数据展示区 -> 我的数据/Leaderboard"
 
 3.  **获取我的活动数据 (需认证)**
     *   **Endpoint**: `/my-data`
@@ -372,6 +406,7 @@ func (h *TradingCompetitionUserHandler) GetSwapContext(ctx context.Context, r *j
         ```
     *   **Response Body**: `dto.UserCompetitionOverallDataDTO`
     *   **描述**: 获取当前认证用户在指定交易大赛中所有奖池的个人数据统计。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-C端.md` - "三、功能设计 -> 1. 功能地图 -> 活动数据展示区 -> 我的数据/Leaderboard"
 
 4.  **获取我的活动结果与奖励 (需认证)**
     *   **Endpoint**: `/my-results`
@@ -384,6 +419,7 @@ func (h *TradingCompetitionUserHandler) GetSwapContext(ctx context.Context, r *j
         ```
     *   **Response Body**: `dto.UserActivityResultDTO`
     *   **描述**: 获取当前认证用户在活动结束后的最终结果，包括奖励列表。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-C端.md` - "三、功能设计 -> 1. 功能地图 -> 活动状态相关展示 -> 活动已结束 - 获奖/未获奖"
 
 ### 奖励领取 (需认证)
 
@@ -398,6 +434,7 @@ func (h *TradingCompetitionUserHandler) GetSwapContext(ctx context.Context, r *j
         ```
     *   **Response Body**: `dto.UserRewardItemDTO` (返回更新后的奖励项状态)
     *   **描述**: 用户领取指定的单个奖励。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-C端.md` - "三、功能设计 -> 1. 功能地图 -> 活动状态相关展示 -> 活动已结束 - 获奖"
 
 6.  **批量领取活动所有可领奖励**
     *   **Endpoint**: `/claim-all-rewards`
@@ -419,6 +456,7 @@ func (h *TradingCompetitionUserHandler) GetSwapContext(ctx context.Context, r *j
         }
         ```
     *   **描述**: 用户尝试批量领取在指定活动中所有状态为 `CLAIMABLE` 的奖励。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-C端.md` - "三、功能设计 -> 1. 功能地图 -> 活动状态相关展示 -> 活动已结束 - 获奖" (Claim All 按钮暗示)
 
 ### 辅助接口
 
@@ -433,5 +471,13 @@ func (h *TradingCompetitionUserHandler) GetSwapContext(ctx context.Context, r *j
         ```
     *   **Response Body**: `dto.SwapContextDTO`
     *   **描述**: 为前端Swap组件提供初始化所需的上下文信息。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-C端.md` - "三、功能设计 -> 1. 功能地图 -> Swap交互区域"
 
 --- 
+
+**备注:**
+
+- 上述HTTP API设计为C端用户提供了活动参与和信息查询的主要接口。
+- 实际部署时，Base URL和具体endpoint路径可根据项目整体API网关和路由策略进行调整。
+- 错误处理和具体的认证/授权逻辑需要在服务层实现，并遵循项目统一规范。
+- 奖励领取操作可能涉及与 `taskon-actions` 或其他专用奖励服务的进一步交互。 
