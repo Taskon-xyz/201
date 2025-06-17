@@ -352,6 +352,7 @@ type TradingCompetitionAdminHandler struct {
 
 // CreateTradingCompetition 创建新的交易大赛
 // Method: tradingCompetitionAdmin_createTradingCompetition
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 活动管理: 创建活动" and "一、产品概述 -> 3. 用户故事" (创建活动页面)
 func (h *TradingCompetitionAdminHandler) CreateTradingCompetition(ctx context.Context, r *jsonrpc.Request, result *dto.TradingCompetitionDetailDTO) error {
 	var params dto.CreateTradingCompetitionParamsDTO
 	if err := jsonrpc.UnmarshalParams(r.Params, &params); err != nil {
@@ -364,6 +365,7 @@ func (h *TradingCompetitionAdminHandler) CreateTradingCompetition(ctx context.Co
 
 // UpdateTradingCompetition 更新已有的交易大赛
 // Method: tradingCompetitionAdmin_updateTradingCompetition
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 活动管理: 编辑活动"
 func (h *TradingCompetitionAdminHandler) UpdateTradingCompetition(ctx context.Context, r *jsonrpc.Request, result *dto.TradingCompetitionDetailDTO) error {
 	var params dto.UpdateTradingCompetitionParamsDTO
 	if err := jsonrpc.UnmarshalParams(r.Params, &params); err != nil {
@@ -376,6 +378,7 @@ func (h *TradingCompetitionAdminHandler) UpdateTradingCompetition(ctx context.Co
 
 // SaveTradingCompetitionAsDraft 将交易大赛保存为草稿
 // Method: tradingCompetitionAdmin_saveTradingCompetitionAsDraft
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 活动操作与辅助功能: 保存草稿"
 func (h *TradingCompetitionAdminHandler) SaveTradingCompetitionAsDraft(ctx context.Context, r *jsonrpc.Request, result *dto.TradingCompetitionDetailDTO) error {
 	// Params can be CreateTradingCompetitionParamsDTO or UpdateTradingCompetitionParamsDTO
 	// Need to determine based on presence of competition_id, or use a wrapper DTO.
@@ -391,6 +394,7 @@ func (h *TradingCompetitionAdminHandler) SaveTradingCompetitionAsDraft(ctx conte
 
 // ListTradingCompetitions 列出交易大赛
 // Method: tradingCompetitionAdmin_listTradingCompetitions
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 活动管理: 查看活动列表"
 func (h *TradingCompetitionAdminHandler) ListTradingCompetitions(ctx context.Context, r *jsonrpc.Request, result *common.ListResponse) error { // Assuming result is common.ListResponse of TradingCompetitionListItemDTO
 	var params struct {
 		Filter     *dto.ListTradingCompetitionsRequestFilter `json:"filter,omitempty"`
@@ -408,6 +412,7 @@ func (h *TradingCompetitionAdminHandler) ListTradingCompetitions(ctx context.Con
 
 // GetTradingCompetitionDetail 获取交易大赛详情
 // Method: tradingCompetitionAdmin_getTradingCompetitionDetail
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - Implicitly supports "三、功能设计 -> 1. 功能地图 -> 活动管理: 编辑活动" by fetching data for the editor.
 func (h *TradingCompetitionAdminHandler) GetTradingCompetitionDetail(ctx context.Context, r *jsonrpc.Request, result *dto.TradingCompetitionDetailDTO) error {
 	var params struct {
 		CompetitionID string `json:"competition_id"`
@@ -422,6 +427,7 @@ func (h *TradingCompetitionAdminHandler) GetTradingCompetitionDetail(ctx context
 
 // PublishTradingCompetition 发布交易大赛
 // Method: tradingCompetitionAdmin_publishTradingCompetition
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 活动操作与辅助功能: 发布活动" and "二、业务流程 -> 2. 关键子流程图 -> 发布流程"
 func (h *TradingCompetitionAdminHandler) PublishTradingCompetition(ctx context.Context, r *jsonrpc.Request, result *dto.BaseSuccessResponse) error {
 	var params struct {
 		CompetitionID string `json:"competition_id"`
@@ -438,6 +444,7 @@ func (h *TradingCompetitionAdminHandler) PublishTradingCompetition(ctx context.C
 
 // DeleteTradingCompetition 删除交易大赛
 // Method: tradingCompetitionAdmin_deleteTradingCompetition
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 活动管理: 删除活动"
 func (h *TradingCompetitionAdminHandler) DeleteTradingCompetition(ctx context.Context, r *jsonrpc.Request, result *dto.BaseSuccessResponse) error {
 	var params struct {
 		CompetitionID string `json:"competition_id"`
@@ -453,6 +460,7 @@ func (h *TradingCompetitionAdminHandler) DeleteTradingCompetition(ctx context.Co
 
 // DepositTokenForCompetition 为交易大赛充值代币
 // Method: tradingCompetitionAdmin_depositTokenForCompetition
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 活动操作与辅助功能: Token充值提示与操作"
 func (h *TradingCompetitionAdminHandler) DepositTokenForCompetition(ctx context.Context, r *jsonrpc.Request, result *dto.BaseSuccessResponse) error { // Response could be more specific
 	var params struct {
 		CompetitionID    string `json:"competition_id"`
@@ -471,6 +479,7 @@ func (h *TradingCompetitionAdminHandler) DepositTokenForCompetition(ctx context.
 
 // GetCompetitionBudgetStatus 获取交易大赛预算状态
 // Method: tradingCompetitionAdmin_getCompetitionBudgetStatus
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - Supports "三、功能设计 -> 2. 功能描述模板 -> 功能点：Token充值" and budget validation for publish.
 func (h *TradingCompetitionAdminHandler) GetCompetitionBudgetStatus(ctx context.Context, r *jsonrpc.Request, result *struct{Deposits []dto.DepositedTokenStatusDTO}) error {
 	var params struct {
 		CompetitionID string `json:"competition_id"`
@@ -486,6 +495,7 @@ func (h *TradingCompetitionAdminHandler) GetCompetitionBudgetStatus(ctx context.
 
 // GetDataAnalysisSummary 获取数据分析摘要
 // Method: tradingCompetitionAdmin_getDataAnalysisSummary
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 数据分析模块: 汇总数据"
 func (h *TradingCompetitionAdminHandler) GetDataAnalysisSummary(ctx context.Context, r *jsonrpc.Request, result *dto.GetDataAnalysisSummaryResponse) error {
 	var params dto.GetDataAnalysisSummaryRequest
 	if err := jsonrpc.UnmarshalParams(r.Params, &params); err != nil {
@@ -498,6 +508,7 @@ func (h *TradingCompetitionAdminHandler) GetDataAnalysisSummary(ctx context.Cont
 
 // GetLeaderboard 获取排行榜数据
 // Method: tradingCompetitionAdmin_getLeaderboard
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 数据分析模块: Leaderboard数据"
 func (h *TradingCompetitionAdminHandler) GetLeaderboard(ctx context.Context, r *jsonrpc.Request, result *common.ListResponse) error { // Assuming result is common.ListResponse of DataAnalysisLeaderboardItemDTO
 	var params struct {
 		CompetitionID string       `json:"competition_id"`
@@ -516,6 +527,7 @@ func (h *TradingCompetitionAdminHandler) GetLeaderboard(ctx context.Context, r *
 
 // GetDetailedTransactions 获取明细交易数据
 // Method: tradingCompetitionAdmin_getDetailedTransactions
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 数据分析模块: 明细交易数据"
 func (h *TradingCompetitionAdminHandler) GetDetailedTransactions(ctx context.Context, r *jsonrpc.Request, result *common.ListResponse) error { // Assuming common.ListResponse of DataAnalysisTransactionItemDTO
 	var params struct {
 		CompetitionID string                                  `json:"competition_id"`
@@ -535,6 +547,7 @@ func (h *TradingCompetitionAdminHandler) GetDetailedTransactions(ctx context.Con
 
 // GetProjectTokenInfoByTwitter (utils_getProjectTokenInfoByTwitter) - 辅助接口
 // Method: utils_getProjectTokenInfoByTwitter
+// Requirement Source: 新需求/整理后的md/new-交易大赛-B端.md - "三、功能设计 -> 1. 功能地图 -> 项目信息配置: 添加新项目 (Twitter Handle抓取)"
 func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx context.Context, r *jsonrpc.Request, result *dto.GetProjectTokenInfoByTwitterResponse) error {
 	var params dto.GetProjectTokenInfoByTwitterRequest
 	if err := jsonrpc.UnmarshalParams(r.Params, &params); err != nil {
@@ -572,18 +585,21 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
     *   **Request Body**: `dto.CreateTradingCompetitionParamsDTO`
     *   **Response Body**: `dto.TradingCompetitionDetailDTO`
     *   **描述**: 创建一个新的交易大赛。后端自动设置创建者信息，状态默认为 `DRAFT`。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 活动管理: 创建活动"
 
 2.  **更新交易大赛**
     *   **Endpoint**: `/update`
     *   **Request Body**: `dto.UpdateTradingCompetitionParamsDTO` (其中 `competition_id` 为必填字段)
     *   **Response Body**: `dto.TradingCompetitionDetailDTO`
     *   **描述**: 更新指定ID的交易大赛信息。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 活动管理: 编辑活动"
 
 3.  **保存交易大赛为草稿**
     *   **Endpoint**: `/save-draft`
     *   **Request Body**: `dto.CreateTradingCompetitionParamsDTO` 或 `dto.UpdateTradingCompetitionParamsDTO` (如果包含 `competition_id` 则为更新现有草稿)
     *   **Response Body**: `dto.TradingCompetitionDetailDTO`
     *   **描述**: 创建或更新一个草稿状态的交易大赛。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 活动操作与辅助功能: 保存草稿"
 
 4.  **获取交易大赛列表**
     *   **Endpoint**: `/list`
@@ -601,6 +617,7 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
         }
         ```
     *   **Response Body**: `common.ListResponse<dto.TradingCompetitionListItemDTO>`
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 活动管理: 查看活动列表"
 
 5.  **获取交易大赛详情**
     *   **Endpoint**: `/detail`
@@ -611,6 +628,7 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
         }
         ```
     *   **Response Body**: `dto.TradingCompetitionDetailDTO`
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - Implicitly supports "三、功能设计 -> 1. 功能地图 -> 活动管理: 编辑活动"
 
 6.  **发布交易大赛**
     *   **Endpoint**: `/publish`
@@ -622,6 +640,7 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
         ```
     *   **Response Body**: `dto.BaseSuccessResponse` (或包含更新后状态的 `dto.TradingCompetitionDetailDTO`)
     *   **描述**: 发布一个交易大赛。后端校验预算、奖池等配置。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 活动操作与辅助功能: 发布活动"
 
 7.  **删除交易大赛**
     *   **Endpoint**: `/delete`
@@ -633,6 +652,7 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
         ```
     *   **Response Body**: `dto.BaseSuccessResponse`
     *   **描述**: 软删除一个交易大赛。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 活动管理: 删除活动"
 
 ### 预算与充值
 
@@ -657,6 +677,7 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
           }
         }
         ```
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 活动操作与辅助功能: Token充值提示与操作"
 
 9.  **获取大赛预算状态**
     *   **Endpoint**: `/budget/status`
@@ -675,6 +696,7 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
         }
         ```
         (对应 `dto.GetCompetitionBudgetStatusResponse`)
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - Supports "三、功能设计 -> 2. 功能描述模板 -> 功能点：Token充值" and budget validation for publish.
 
 
 ### 数据分析
@@ -690,6 +712,7 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
         }
         ```
     *   **Response Body**: `dto.GetDataAnalysisSummaryResponse`
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 数据分析模块: 汇总数据"
 
 11. **获取排行榜**
     *   **Endpoint**: `/analytics/leaderboard`
@@ -705,6 +728,7 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
         }
         ```
     *   **Response Body**: `common.ListResponse<dto.DataAnalysisLeaderboardItemDTO>`
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 数据分析模块: Leaderboard数据"
 
 12. **获取明细交易数据**
     *   **Endpoint**: `/analytics/transactions`
@@ -723,6 +747,7 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
         }
         ```
     *   **Response Body**: `common.ListResponse<dto.DataAnalysisTransactionItemDTO>`
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 数据分析模块: 明细交易数据"
 
 ### 辅助接口
 
@@ -736,5 +761,6 @@ func (h *TradingCompetitionAdminHandler) GetProjectTokenInfoByTwitter(ctx contex
         ```
     *   **Response Body**: `dto.GetProjectTokenInfoByTwitterResponse`
     *   **描述**: 用于B端配置项目信息时，通过Twitter Handle自动获取项目代币信息。
+    *   **Requirement Source**: `新需求/整理后的md/new-交易大赛-B端.md` - "三、功能设计 -> 1. 功能地图 -> 项目信息配置: 添加新项目 (Twitter Handle抓取)"
 
 ---
