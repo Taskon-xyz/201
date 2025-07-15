@@ -26,7 +26,7 @@
 
 1\. **邀请Dashboard页**
 
-<img src="/Users/liuhongming/Downloads/taskOnGo/新需求/整理后的md/media/media/image1.png" style="width:5.75in;height:3.inspire-shot" />
+<img src="./media/media/image1.png" style="width:5.75in;height:3.inspire-shot" />
 
 ***图片描述***:
 该图片展示了“邀请Dashboard”的界面原型。主要包含以下几个部分：
