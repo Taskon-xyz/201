@@ -31,17 +31,17 @@
 ***图片描述***:
 该图片展示了“邀请Dashboard”的界面原型。主要包含以下几个部分：
 
--   **顶部**: 显示合作伙伴的邀请链接（Invite Link）和邀请码（Invite Code）。
--   **数据概览区**: 以卡片形式展示了关键指标，包括：
-    -   **Register Users**: 注册用户总数。
-    -   **Trading Users**: 产生过交易的用户数。
-    -   **Trading Volume**: 邀请用户的总交易量。
-    -   **Trading Fee**: 邀请用户产生的总交易费用。
--   **筛选与列表区**:
-    -   提供了时间筛选功能（Yesterday, 7D, 30D）。
-    -   下方是一个“Detail Data”表格，用于展示详细的交易记录，包含时间（Time）、网络（Network）、交易金额（Trading
-        Value）、交易费用（Trading Fee）和用户地址（Address）等字段。
-    -   右上角有一个“Download”按钮，用于导出数据。
+- **顶部**: 显示合作伙伴的邀请链接（Invite Link）和邀请码（Invite Code）。
+- **数据概览区**: 以卡片形式展示了关键指标，包括：
+  - **Register Users**: 注册用户总数。
+  - **Trading Users**: 产生过交易的用户数。
+  - **Trading Volume**: 邀请用户的总交易量。
+  - **Trading Fee**: 邀请用户产生的总交易费用。
+- **筛选与列表区**:
+  - 提供了时间筛选功能（Yesterday, 7D, 30D）。
+  - 下方是一个“Detail Data”表格，用于展示详细的交易记录，包含时间（Time）、网络（Network）、交易金额（Trading
+    Value）、交易费用（Trading Fee）和用户地址（Address）等字段。
+  - 右上角有一个“Download”按钮，用于导出数据。
 
 ---
 
