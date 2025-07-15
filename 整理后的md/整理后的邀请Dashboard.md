@@ -55,7 +55,7 @@ graph TD
 - **访问方式**: 页面为内部使用，不设面向普通用户的C端入口。通过特定URL格式 `taskon.xyz/invitedashboard/{invite_code}` 直接访问。
 - **页面布局与原型**:
 
-<img src="/Users/liuhongming/Downloads/taskOnGo/新需求/整理后的md/media/media/image1.png" style="width:5.75in;height:3.inspire-shot" />
+<img src="./media/media/image1.png" style="width:5.75in;height:3.inspire-shot" />
 
 ***图片描述***: 该图片展示了“邀请Dashboard”的界面原型。主要包含以下几个部分：
 -   **顶部**: 显示合作伙伴的邀请链接（Invite Link）和邀请码（Invite Code）。
