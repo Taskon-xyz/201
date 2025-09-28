@@ -1,5 +1,32 @@
 # Cloudflare Turnstile 集成技术方案
 
+## 参考文档
+
+本技术方案基于以下 Cloudflare Turnstile 官方文档制定：
+
+### 核心文档
+- **[Turnstile Overview](https://developers.cloudflare.com/turnstile/)** - Turnstile 产品概述和功能介绍
+- **[Get Started Guide](https://developers.cloudflare.com/turnstile/get-started/)** - 快速入门指南，包含完整集成流程
+- **[Client-side Rendering](https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/)** - 客户端渲染实现方法，包含隐式和显式渲染
+- **[Server-side Validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/)** - 服务端验证 API 详细说明
+
+### 技术细节文档
+- **[Widget Types](https://developers.cloudflare.com/turnstile/concepts/widget-types/)** - 三种验证模式详解（Managed、Non-interactive、Invisible）
+- **[Turnstile Plans](https://developers.cloudflare.com/turnstile/plans/)** - 定价方案和使用限制说明
+- **[Pricing Information](https://www.cloudflare.com/application-services/products/turnstile/)** - 官方定价页面
+
+### API 参考
+- **Siteverify API Endpoint**: `https://challenges.cloudflare.com/turnstile/v0/siteverify`
+- **JavaScript SDK**: `https://challenges.cloudflare.com/turnstile/v0/api.js`
+
+### 验证信息
+- **免费使用确认**: 根据官方文档，Turnstile 的 Managed 模式对所有用户完全免费，无使用限制
+- **性能保证**: 无 QPS 限制，支持高并发访问
+- **技术支持**: WCAG 2.1 AA 合规，支持多种集成方式
+
+> 📝 **文档版本**: 本方案基于 2025年1月 的最新官方文档编写
+> 🔗 **官方支持**: 如遇到技术问题，可参考 [Cloudflare Community](https://community.cloudflare.com/c/developers/turnstile/) 获取支持
+
 ## 项目概述
 
 本文档详细描述如何在 Vue3 前端和 Golang 后端项目中集成 Cloudflare Turnstile 验证码服务。Turnstile 是一个免费、现代化的 CAPTCHA 替代方案，提供优秀的用户体验和强大的机器人防护能力。
