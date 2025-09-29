@@ -94,21 +94,99 @@ graph TB
 
 ## 前期准备
 
-### 1. 获取 Cloudflare Turnstile 密钥
+### 1. 创建 Cloudflare Turnstile 小组件
 
+#### 步骤一：登录 Cloudflare Dashboard
 1. 访问 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. 选择 "Turnstile" 服务
-3. 创建新的 Site Key
-4. 记录以下信息：
-   - **Site Key**（公开密钥，用于前端）
-   - **Secret Key**（私密密钥，用于后端验证）
+2. 使用你的 Cloudflare 账户登录
 
-### 2. 配置域名白名单
+#### 步骤二：进入 Turnstile 服务
+1. 在左侧导航栏中找到并点击 **"Turnstile"**
+2. 进入 Turnstile 管理页面
 
-在 Cloudflare 控制台中配置允许的域名：
-- 开发环境：`localhost`、`127.0.0.1`
-- 测试环境：`test.yourdomain.com`
-- 生产环境：`yourdomain.com`
+#### 步骤三：添加新的小组件
+1. 点击 **"📋 Turnstile 小组件"** 按钮
+2. 在弹出的"添加小组件"对话框中进行配置：
+
+#### 步骤四：配置小组件基本信息
+```
+小组件名称：
+为小组件添加名称，方便将来识别
+示例：登录表单验证、注册页面验证、联系表单验证
+```
+
+#### 步骤五：主机名管理
+1. 点击 **"📋 主机名"** 按钮
+2. 添加允许使用此小组件的域名：
+
+**开发环境配置：**
+```
+localhost
+127.0.0.1
+*.localhost（支持子域名）
+```
+
+**测试环境配置：**
+```
+test.yourdomain.com
+staging.yourdomain.com
+```
+
+**生产环境配置：**
+```
+yourdomain.com
+www.yourdomain.com
+```
+
+> 💡 **提示**: 你可以为同一个小组件配置多个主机名，也可以使用通配符 `*` 来匹配子域名
+
+#### 步骤六：保存并获取密钥
+1. 点击 **"添加主机名"** 完成主机名配置
+2. 点击 **"保存"** 创建小组件
+3. 创建成功后，记录以下关键信息：
+   - **Site Key（站点密钥）**：用于前端 JavaScript 集成，可以公开
+   - **Secret Key（密钥）**：用于后端验证，必须保密
+
+### 2. 小组件配置最佳实践
+
+#### 命名规范
+- 使用描述性名称，如："生产环境-登录表单"、"测试环境-注册页面"
+- 区分不同环境，避免混淆
+- 包含功能说明，便于团队协作
+
+#### 环境分离
+建议为不同环境创建独立的小组件：
+```
+开发环境：TaskOn-Dev-Login
+测试环境：TaskOn-Staging-Login
+生产环境：TaskOn-Prod-Login
+```
+
+#### 主机名配置注意事项
+- **精确匹配**：只添加实际需要的域名，提高安全性
+- **通配符使用**：`*.yourdomain.com` 可以匹配所有子域名
+- **本地开发**：确保添加 `localhost` 和 `127.0.0.1`
+- **端口处理**：开发环境如果使用非标准端口（如 :3000），主机名应为 `localhost:3000`
+
+### 3. 密钥管理和安全
+
+#### Site Key（站点密钥）
+```javascript
+// 前端使用示例
+const TURNSTILE_SITE_KEY = '0x4AAA000000AAA000AA0_AAAA_AA0_AA0A'
+```
+
+#### Secret Key（密钥）
+```go
+// 后端使用示例（环境变量）
+TURNSTILE_SECRET_KEY=0x4AAA000000AAA000AA0_AAAA_AA0_AA0A_AAA_AAA_AAA
+```
+
+#### 安全建议
+- **保密原则**：Secret Key 绝不能暴露在前端代码中
+- **环境变量**：使用环境变量存储密钥，不要硬编码
+- **定期轮换**：建议定期更换密钥，特别是有安全疑虑时
+- **权限控制**：限制有权访问密钥的人员范围
 
 ## Vue3 前端集成实现
 
