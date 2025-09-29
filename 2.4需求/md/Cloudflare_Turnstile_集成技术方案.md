@@ -24,8 +24,12 @@
 - **性能保证**: 无 QPS 限制，支持高并发访问
 - **技术支持**: WCAG 2.1 AA 合规，支持多种集成方式
 
-> 📝 **文档版本**: 本方案基于 2025年1月 的最新官方文档编写
+### 代码审查
+- **[代码审查报告](./Turnstile_代码审查报告.md)** - 基于官方文档的详细代码审查和修正说明
+
+> 📝 **文档版本**: 本方案基于 2025年1月 的最新官方文档编写，并经过逐行代码审查
 > 🔗 **官方支持**: 如遇到技术问题，可参考 [Cloudflare Community](https://community.cloudflare.com/c/developers/turnstile/) 获取支持
+> ⚠️ **重要**: 代码已根据官方文档进行审查和修正，确保与 Turnstile 最新 API 完全兼容
 
 ## 项目概述
 
@@ -299,10 +303,7 @@ const widgetId = ref<string>()
 const error = ref<string>('')
 const loading = ref(false)
 
-// 回调函数名称（需要全局可访问）
-const callbackName = `turnstileCallback_${Math.random().toString(36).substr(2, 9)}`
-const errorCallbackName = `turnstileErrorCallback_${Math.random().toString(36).substr(2, 9)}`
-const expiredCallbackName = `turnstileExpiredCallback_${Math.random().toString(36).substr(2, 9)}`
+// 注意：使用直接函数引用，无需全局回调函数名称
 
 // 验证成功回调
 const onSuccess = (token: string) => {
@@ -328,7 +329,7 @@ const onExpired = () => {
   emit('loading', false)
 }
 
-// 错误代码转换为用户友好的消息
+// 错误代码转换为用户友好的消息（基于官方文档）
 const getErrorMessage = (errorCode: string): string => {
   const errorMessages: Record<string, string> = {
     'timeout-or-duplicate': '验证超时或重复提交',
@@ -337,7 +338,6 @@ const getErrorMessage = (errorCode: string): string => {
     'invalid-input-response': '验证响应无效',
     'missing-input-response': '验证响应缺失',
     'bad-request': '请求格式错误',
-    'timeout-or-duplicate': '请求超时或重复',
     'internal-error': '服务内部错误，请稍后重试'
   }
   return errorMessages[errorCode] || `未知错误: ${errorCode}`
@@ -378,11 +378,6 @@ const initTurnstile = async () => {
     return
   }
 
-  // 设置全局回调函数
-  ;(window as any)[callbackName] = onSuccess
-  ;(window as any)[errorCallbackName] = onError
-  ;(window as any)[expiredCallbackName] = onExpired
-
   // 渲染 widget
   if (turnstileElement.value) {
     try {
@@ -390,9 +385,10 @@ const initTurnstile = async () => {
         sitekey: props.siteKey,
         theme: props.theme,
         size: props.size,
-        callback: callbackName,
-        'error-callback': errorCallbackName,
-        'expired-callback': expiredCallbackName
+        // 直接传递函数引用，符合官方推荐方式
+        callback: (token: string) => onSuccess(token),
+        'error-callback': (error: string) => onError(error),
+        'expired-callback': () => onExpired()
       }
 
       // 添加模式特定配置
@@ -417,21 +413,18 @@ const loadTurnstileSDK = (): Promise<void> => {
     }
 
     const script = document.createElement('script')
-    const renderMode = props.mode === 'invisible' ? 'explicit' : 'explicit'
-    script.src = `https://challenges.cloudflare.com/turnstile/v0/api.js?render=${renderMode}`
+    // 使用显式渲染模式，符合官方推荐
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
     script.async = true
     script.defer = true
 
     script.onload = () => {
-      // 等待 SDK 完全加载
-      const checkTurnstile = () => {
-        if (window.turnstile) {
-          resolve()
-        } else {
-          setTimeout(checkTurnstile, 100)
-        }
+      // 直接检查是否已加载，符合官方示例
+      if (window.turnstile) {
+        resolve()
+      } else {
+        reject(new Error('Turnstile SDK failed to initialize'))
       }
-      checkTurnstile()
     }
 
     script.onerror = () => {
@@ -455,15 +448,13 @@ onMounted(async () => {
 
 // 组件卸载清理
 onUnmounted(() => {
-  // 清理全局回调函数
-  if ((window as any)[callbackName]) {
-    delete (window as any)[callbackName]
-  }
-  if ((window as any)[errorCallbackName]) {
-    delete (window as any)[errorCallbackName]
-  }
-  if ((window as any)[expiredCallbackName]) {
-    delete (window as any)[expiredCallbackName]
+  // 移除 widget（如果存在）
+  if (widgetId.value && window.turnstile) {
+    try {
+      window.turnstile.remove(widgetId.value)
+    } catch (err) {
+      console.warn('Failed to remove Turnstile widget:', err)
+    }
   }
 })
 
@@ -795,9 +786,10 @@ func getDurationEnv(key string, defaultValue time.Duration) time.Duration {
 package service
 
 import (
-    "encoding/json"
     "fmt"
     "net"
+    "net/url"
+    "strings"
     "time"
 
     "github.com/go-resty/resty/v2"
@@ -809,21 +801,14 @@ const (
     TurnstileSiteverifyURL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 )
 
-// TurnstileRequest Siteverify API 请求结构
-type TurnstileRequest struct {
-    Secret   string `json:"secret"`
-    Response string `json:"response"`
-    RemoteIP string `json:"remoteip,omitempty"`
-}
-
-// TurnstileResponse Siteverify API 响应结构
+// TurnstileResponse Siteverify API 响应结构（基于官方文档）
 type TurnstileResponse struct {
-    Success     bool      `json:"success"`
-    ChallengeTS time.Time `json:"challenge_ts"`
-    Hostname    string    `json:"hostname"`
-    ErrorCodes  []string  `json:"error-codes,omitempty"`
-    Action      string    `json:"action,omitempty"`
-    CData       string    `json:"cdata,omitempty"`
+    Success     bool     `json:"success"`
+    ChallengeTS string   `json:"challenge_ts"` // RFC3339 格式字符串
+    Hostname    string   `json:"hostname"`
+    ErrorCodes  []string `json:"error-codes,omitempty"`
+    Action      string   `json:"action,omitempty"`
+    CData       string   `json:"cdata,omitempty"`
 }
 
 // TurnstileService Turnstile 验证服务
@@ -846,17 +831,10 @@ func NewTurnstileService() *TurnstileService {
     }
 }
 
-// VerifyToken 验证 Turnstile token
+// VerifyToken 验证 Turnstile token（基于官方文档的标准实现）
 func (s *TurnstileService) VerifyToken(token, remoteIP string) (*TurnstileResponse, error) {
     if token == "" {
         return nil, fmt.Errorf("token is required")
-    }
-
-    // 构建请求
-    request := TurnstileRequest{
-        Secret:   s.secretKey,
-        Response: token,
-        RemoteIP: remoteIP,
     }
 
     logrus.WithFields(logrus.Fields{
@@ -864,12 +842,20 @@ func (s *TurnstileService) VerifyToken(token, remoteIP string) (*TurnstileRespon
         "hasToken": token != "",
     }).Debug("Verifying Turnstile token")
 
+    // 构建 form 数据（官方要求的格式）
+    formData := url.Values{}
+    formData.Set("secret", s.secretKey)
+    formData.Set("response", token)
+    if remoteIP != "" {
+        formData.Set("remoteip", remoteIP)
+    }
+
     var response TurnstileResponse
 
-    // 发送验证请求
+    // 发送验证请求，使用官方要求的 form 格式
     resp, err := s.client.R().
-        SetHeader("Content-Type", "application/json").
-        SetBody(request).
+        SetHeader("Content-Type", "application/x-www-form-urlencoded").
+        SetBody(formData.Encode()).
         SetResult(&response).
         Post(TurnstileSiteverifyURL)
 
