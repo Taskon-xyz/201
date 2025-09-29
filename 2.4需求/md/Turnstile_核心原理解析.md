@@ -1,5 +1,27 @@
 # Cloudflare Turnstile 核心原理解析
 
+## ⚠️ 重要声明
+
+**本文档信息来源说明：**
+
+### ✅ 官方确认信息
+- 基于 Cloudflare 官方文档的公开信息
+- Turnstile 的基本功能、模式、集成方法
+
+### 🔬 技术原理推理
+- 基于现代反机器人技术的通用原理
+- 参考学术论文和行业最佳实践
+- 结合浏览器安全、设备指纹等已知技术
+
+### ⚠️ 推测性内容
+- 具体的实现细节和算法描述
+- 代码示例仅为技术演示，非 Cloudflare 真实实现
+- Cloudflare 出于安全考虑不公开具体检测机制
+
+**目的：帮助理解反机器人技术原理，具体实现以官方文档为准**
+
+---
+
 ## 🧠 核心理念：从"挑战-响应"到"行为分析"
 
 ### 传统 CAPTCHA 的问题
@@ -39,10 +61,10 @@ graph TB
 
 ## 🔍 多维度检测技术
 
-### 1. 浏览器指纹识别
+### 1. 浏览器指纹识别 🔬 *[技术原理推理]*
 **收集的信息：**
 ```javascript
-// 示例：Turnstile 可能收集的浏览器特征
+// 示例：现代反机器人系统可能收集的浏览器特征（技术演示）
 const browserFingerprint = {
     userAgent: navigator.userAgent,
     platform: navigator.platform,
@@ -66,10 +88,10 @@ const browserFingerprint = {
 - 🤖 **机器人特征**：自动化工具通常有相似的指纹模式
 - 📊 **统计异常**：大量相同指纹 = 可疑活动
 
-### 2. 行为模式分析
+### 2. 行为模式分析 🔬 *[技术原理推理]*
 **鼠标/触摸行为：**
 ```javascript
-// 示例：行为数据收集
+// 示例：行为数据收集（技术演示，非实际实现）
 const behaviorData = {
     mouseMovements: [
         {x: 100, y: 150, timestamp: 1640995200000},
@@ -189,7 +211,7 @@ function cryptographicChallenge() {
 }
 ```
 
-## 🧮 AI 驱动的风险评分系统
+## 🧮 AI 驱动的风险评分系统 🔬 *[技术原理推理]*
 
 ### 机器学习模型
 ```mermaid
@@ -367,8 +389,9 @@ def turnstile_detection():
 
 ## 🔬 技术实现细节
 
-### 客户端采集代码（简化版）
+### 客户端采集代码 ⚠️ *[推测性演示代码]*
 ```javascript
+// 以下代码仅为技术原理演示，非 Cloudflare 实际实现
 class TurnstileAnalyzer {
     constructor() {
         this.features = {}
@@ -437,8 +460,9 @@ class TurnstileAnalyzer {
 }
 ```
 
-### 服务端验证流程
+### 服务端验证流程 ⚠️ *[推测性演示代码]*
 ```python
+# 以下代码仅为技术原理演示，非 Cloudflare 实际实现
 class TurnstileVerifier:
     def __init__(self):
         self.ai_model = load_risk_assessment_model()
